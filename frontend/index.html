@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BookSoftware</title>
+  <style>
+    :root {
+      --bg: #f3f3f3;
+      --panel: #ffffff;
+      --line: #d9d9d9;
+      --text: #1e1e1e;
+      --muted: #666;
+      --soft: #f1f3f5;
+      --primary: #222;
+      --success: #2a9d63;
+      --warning: #f7b731;
+      --danger: #d94b4b;
+      --shadow: rgba(0, 0, 0, 0.08);
+      --hover: rgba(17, 24, 39, 0.02);
+    }
+
+    body[data-theme="dark"] {
+      --bg: #101418;
+      --panel: #171d23;
+      --line: #2a3139;
+      --text: #ebf1f5;
+      --muted: #a7b2bd;
+      --soft: #1b232a;
+      --primary: #e7edf3;
+      --success: #61d89a;
+      --warning: #f7c56d;
+      --danger: #ff7d7d;
+      --shadow: rgba(0, 0, 0, 0.35);
+      --hover: rgba(255, 255, 255, 0.03);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .app-shell {
+      max-width: 1200px;
+      margin: 28px auto 40px;
+      padding: 0 18px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: clamp(2rem, 3vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.06em;
+      color: var(--text);
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      display: inline-block;
+      border-radius: 7px;
+      background: linear-gradient(135deg, #2d9cdb, #52d2bf);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-mark::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 0 55%, rgba(255,255,255,0.28) 55% 100%);
+      clip-path: polygon(0 0, 60% 0, 60% 60%, 0 60%);
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 12px;
+      height: 12px;
+      background: linear-gradient(135deg, #f9d66b, #f08c4f);
+      border-radius: 2px;
+      box-shadow: -9px -9px 0 0 rgba(58, 211, 184, 0.92);
+    }
+
+    .theme-toggle {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 8px var(--shadow);
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-1px);
+      border-color: #a7bed9;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .stat-value {
+      font-size: clamp(1.5rem, 2vw, 2rem);
+      font-weight: 800;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .search-box {
+      flex: 1 1 320px;
+    }
+
+    .search-box input {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .search-box input:focus {
+      border-color: #a7bed9;
+      box-shadow: 0 0 0 3px rgba(83, 162, 255, 0.12);
+    }
+
+    .filter-group {
+      display: inline-flex;
+      gap: 8px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 4px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      padding: 9px 12px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .filter-btn.active {
+      background: var(--panel);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .book-form {
+      display: grid;
+      grid-template-columns: 1.5fr 1.5fr 1.3fr 1.1fr 1fr 1.2fr 1.7fr auto auto;
+      gap: 10px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 2px 8px var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .field,
+    .select-field {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 11px 12px;
+      font-size: 0.98rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .field:focus,
+    .select-field:focus {
+      border-color: #a7bed9;
+      box-shadow: 0 0 0 3px rgba(83, 162, 255, 0.12);
+    }
+
+    .btn {
+      border: 1px solid #c7c7c7;
+      border-radius: 8px;
+      background: #f4f4f4;
+      padding: 11px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      transition: 0.15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+
+    .btn-primary {
+      background: #202124;
+      border-color: #202124;
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #f2f2f2;
+    }
+
+    .alert {
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      display: none;
+      font-weight: 600;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert.error {
+      background: #fff1f1;
+      border-color: #e8b1b1;
+      color: #9f2c2c;
+    }
+
+    .alert.success {
+      background: #eefaf3;
+      border-color: #bfe3cc;
+      color: #236d45;
+    }
+
+    .table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px var(--shadow);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      text-align: left;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      color: var(--muted);
+      background: #fafafa;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    tbody td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr.leido {
+      background: rgba(42, 157, 99, 0.03);
+    }
+
+    tbody tr:hover {
+      background: var(--hover);
+    }
+
+    .titulo-cell {
+      font-weight: 700;
+    }
+
+    .titulo-cell.leido {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .estado-pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: #f5f5f5;
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+
+    .estado-pill.leido {
+      background: rgba(42, 157, 99, 0.1);
+      border-color: rgba(42, 157, 99, 0.2);
+      color: var(--success);
+    }
+
+    .stars {
+      display: inline-flex;
+      gap: 2px;
+      font-size: 1.1rem;
+      letter-spacing: 0.04em;
+    }
+
+    .star {
+      color: #d3d3d3;
+    }
+
+    .star.filled {
+      color: var(--warning);
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .mini-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .mini-btn.delete {
+      color: var(--danger);
+    }
+
+    .book-thumb {
+      width: 52px;
+      height: 72px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #f4f4f4;
+      display: block;
+    }
+
+    .empty-state {
+      padding: 30px 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    @media (max-width: 820px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+      }
+
+      .book-form {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .book-form {
+        grid-template-columns: 1fr;
+      }
+
+      .btn,
+      .filter-btn,
+      .mini-btn {
+        width: 100%;
+      }
+
+      table {
+        min-width: 720px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="topbar">
+      <div class="brand" aria-label="BookSoftware">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>BookSoftware</span>
+      </div>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Cambiar tema">Modo oscuro</button>
+    </div>
+
+    <div class="stats-grid" aria-label="Estadísticas de libros">
+      <div class="stat-card">
+        <span class="stat-label">Total</span>
+        <span class="stat-value" id="stat-total">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Leídos</span>
+        <span class="stat-value" id="stat-leidos">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Pendientes</span>
+        <span class="stat-value" id="stat-pendientes">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Media</span>
+        <span class="stat-value" id="stat-media">0.0</span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <input id="searchInput" type="search" placeholder="Buscar por título, autor o género..." aria-label="Buscar libros">
+      </div>
+
+      <div class="filter-group" aria-label="Filtros de libros">
+        <button class="filter-btn active" type="button" data-filter="todos">Todos</button>
+        <button class="filter-btn" type="button" data-filter="pendientes">Pendientes</button>
+        <button class="filter-btn" type="button" data-filter="leidos">Leídos</button>
+      </div>
+    </div>
+
+    <div id="alertBox" class="alert" role="alert" aria-live="polite"></div>
+
+    <form id="bookForm" class="book-form" novalidate>
+      <input id="titulo" class="field" type="text" placeholder="Título" aria-label="Título" required>
+      <input id="autor" class="field" type="text" placeholder="Autor" aria-label="Autor" required>
+      <input id="isbn" class="field" type="text" placeholder="ISBN" aria-label="ISBN">
+      <select id="genero" class="select-field" aria-label="Género">
+        <option value="General">General</option>
+        <option value="Ficción">Ficción</option>
+        <option value="Ciencia Ficción">Ciencia Ficción</option>
+        <option value="Historia">Historia</option>
+        <option value="Novela">Novela</option>
+        <option value="Clásico">Clásico</option>
+        <option value="Biografía">Biografía</option>
+        <option value="Aventura">Aventura</option>
+      </select>
+      <input id="anio" class="field" type="number" min="0" max="2100" placeholder="Año" aria-label="Año">
+      <select id="calificacion" class="select-field" aria-label="Calificación">
+        <option value="">Calificación</option>
+        <option value="1">1 estrella</option>
+        <option value="2">2 estrellas</option>
+        <option value="3">3 estrellas</option>
+        <option value="4">4 estrellas</option>
+        <option value="5">5 estrellas</option>
+      </select>
+      <input id="portada" class="field" type="url" placeholder="URL de portada" aria-label="URL de portada">
+      <button id="buscarIsbnBtn" class="btn btn-secondary" type="button">Buscar ISBN</button>
+      <button id="submitBtn" class="btn btn-primary" type="submit">Agregar</button>
+      <button id="cancelBtn" class="btn btn-secondary" type="button" hidden>Cancelar</button>
+    </form>
+
+    <div class="table-wrap">
+      <table aria-label="Lista de libros">
+        <thead>
+          <tr>
+            <th>Portada</th>
+            <th>Título</th>
+            <th>Autor</th>
+            <th>Género</th>
+            <th>Año</th>
+            <th>Calificación</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="lista"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const API = "http://localhost:3000";
+    const state = {
+      filtro: "todos",
+      busqueda: "",
+      editId: null,
+    };
+
+    const alertBox = document.getElementById("alertBox");
+    const searchInput = document.getElementById("searchInput");
+    const form = document.getElementById("bookForm");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const buscarIsbnBtn = document.getElementById("buscarIsbnBtn");
+    const lista = document.getElementById("lista");
+    const themeToggle = document.getElementById("themeToggle");
+
+    function applyTheme(theme) {
+      const isDark = theme === "dark";
+      document.body.dataset.theme = isDark ? "dark" : "light";
+      themeToggle.textContent = isDark ? "Modo claro" : "Modo oscuro";
+      localStorage.setItem("booksoftware-theme", theme);
+    }
+
+    function showAlert(message, type = "error") {
+      alertBox.textContent = message;
+      alertBox.className = `alert show ${type}`;
+    }
+
+    function clearAlert() {
+      alertBox.textContent = "";
+      alertBox.className = "alert";
+    }
+
+    async function fetchJson(url, options = {}) {
+      try {
+        const response = await fetch(url, {
+          headers: { "Content-Type": "application/json" },
+          ...options,
+        });
+
+        const contentType = response.headers.get("content-type") || "";
+        const payload = contentType.includes("application/json") ? await response.json() : await response.text();
+
+        if (!response.ok) {
+          throw new Error(payload && payload.error ? payload.error : "Error del servidor.");
+        }
+
+        return payload;
+      } catch (error) {
+        showAlert(error.message || "El backend no está disponible. Verifica que Docker esté levantado.", "error");
+        throw error;
+      }
+    }
+
+    function setFilterButtons() {
+      document.querySelectorAll(".filter-btn").forEach((button) => {
+        button.classList.toggle("active", button.dataset.filter === state.filtro);
+      });
+    }
+
+    function createStars(value) {
+      const container = document.createElement("div");
+      container.className = "stars";
+      const rating = Number(value) || 0;
+
+      for (let i = 1; i <= 5; i += 1) {
+        const estrella = document.createElement("span");
+        estrella.textContent = i <= rating ? "★" : "☆";
+        estrella.className = i <= rating ? "star filled" : "star";
+        container.appendChild(estrella);
+      }
+
+      return container;
+    }
+
+    function renderStats(stats) {
+      document.getElementById("stat-total").textContent = stats.total ?? 0;
+      document.getElementById("stat-leidos").textContent = stats.leidos ?? 0;
+      document.getElementById("stat-pendientes").textContent = stats.pendientes ?? 0;
+      document.getElementById("stat-media").textContent = Number(stats.media ?? 0).toFixed(1);
+    }
+
+    function esLeido(libro) {
+      return Number(libro.leido) === 1 || libro.leido === true || libro.leido === "1";
+    }
+
+    function renderLista(libros) {
+      if (!libros.length) {
+        lista.innerHTML = '<tr><td class="empty-state" colspan="8">No hay libros con ese filtro o búsqueda.</td></tr>';
+        return;
+      }
+
+      lista.innerHTML = "";
+
+      libros.forEach((libro) => {
+        const leido = esLeido(libro);
+        const row = document.createElement("tr");
+        row.classList.toggle("leido", leido);
+
+        const portadaCell = document.createElement("td");
+        if (libro.portada) {
+          const image = document.createElement("img");
+          image.className = "book-thumb";
+          image.src = libro.portada;
+          image.alt = `Portada de ${libro.titulo}`;
+          image.loading = "lazy";
+          portadaCell.appendChild(image);
+        } else {
+          portadaCell.textContent = "Sin portada";
+        }
+
+        const titulo = document.createElement("td");
+        titulo.className = `titulo-cell ${leido ? "leido" : ""}`;
+        titulo.textContent = libro.titulo;
+
+        const autor = document.createElement("td");
+        autor.textContent = libro.autor;
+
+        const genero = document.createElement("td");
+        genero.textContent = libro.genero || "General";
+
+        const anio = document.createElement("td");
+        anio.textContent = libro.anio ?? "-";
+
+        const calificacion = document.createElement("td");
+        calificacion.appendChild(createStars(libro.calificacion || 0));
+
+        const estado = document.createElement("td");
+        const estadoPill = document.createElement("span");
+        estadoPill.textContent = leido ? "Leído" : "Pendiente";
+        estadoPill.className = `estado-pill ${leido ? "leido" : ""}`;
+        estado.appendChild(estadoPill);
+
+        const acciones = document.createElement("td");
+        const actionWrap = document.createElement("div");
+        actionWrap.className = "actions";
+
+        const toggleBtn = document.createElement("button");
+        toggleBtn.type = "button";
+        toggleBtn.className = "mini-btn";
+        toggleBtn.textContent = leido ? "No leído" : "Leído";
+        toggleBtn.addEventListener("click", async () => {
+          await alternarEstado(libro.id);
+        });
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "mini-btn";
+        editBtn.textContent = "Editar";
+        editBtn.addEventListener("click", () => prepararEdicion(libro));
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "mini-btn delete";
+        deleteBtn.textContent = "Eliminar";
+        deleteBtn.addEventListener("click", () => borrarLibro(libro.id, libro.titulo));
+
+        actionWrap.appendChild(toggleBtn);
+        actionWrap.appendChild(editBtn);
+        actionWrap.appendChild(deleteBtn);
+        acciones.appendChild(actionWrap);
+
+        row.appendChild(portadaCell);
+        row.appendChild(titulo);
+        row.appendChild(autor);
+        row.appendChild(genero);
+        row.appendChild(anio);
+        row.appendChild(calificacion);
+        row.appendChild(estado);
+        row.appendChild(acciones);
+
+        lista.appendChild(row);
+      });
+    }
+
+    async function cargarDatos() {
+      try {
+        const url = `${API}/libros?search=${encodeURIComponent(state.busqueda)}&filtro=${encodeURIComponent(state.filtro)}`;
+        const [libros, stats] = await Promise.all([
+          fetchJson(url),
+          fetchJson(`${API}/estadisticas`),
+        ]);
+
+        renderLista(libros);
+        renderStats(stats);
+        clearAlert();
+      } catch (error) {
+        // Error ya mostrado por fetchJson; no rompemos la UI.
+      }
+    }
+
+    function prepararEdicion(libro) {
+      state.editId = libro.id;
+      document.getElementById("titulo").value = libro.titulo || "";
+      document.getElementById("autor").value = libro.autor || "";
+      document.getElementById("isbn").value = libro.isbn || "";
+      document.getElementById("genero").value = libro.genero || "General";
+      document.getElementById("anio").value = libro.anio ?? "";
+      document.getElementById("calificacion").value = libro.calificacion ?? "";
+      document.getElementById("portada").value = libro.portada || "";
+      submitBtn.textContent = "Guardar cambios";
+      cancelBtn.hidden = false;
+      document.getElementById("titulo").focus();
+    }
+
+    function resetFormulario() {
+      form.reset();
+      state.editId = null;
+      submitBtn.textContent = "Agregar";
+      cancelBtn.hidden = true;
+    }
+
+    async function buscarPorIsbn() {
+      const isbn = document.getElementById("isbn").value.trim();
+      if (!isbn) {
+        showAlert("Escribe un ISBN antes de buscar.", "error");
+        return;
+      }
+
+      try {
+        const data = await fetchJson(`${API}/libros/isbn/${encodeURIComponent(isbn)}`);
+        if (!data?.libro) {
+          throw new Error("No se pudieron obtener los datos del ISBN.");
+        }
+
+        const libro = data.libro;
+        if (libro.titulo) document.getElementById("titulo").value = libro.titulo;
+        if (libro.autor) document.getElementById("autor").value = libro.autor;
+        if (libro.anio) document.getElementById("anio").value = libro.anio;
+        if (libro.genero) document.getElementById("genero").value = libro.genero;
+        if (libro.portada) document.getElementById("portada").value = libro.portada;
+
+        showAlert("Datos del ISBN cargados correctamente.", "success");
+      } catch (error) {
+        showAlert(error.message || "No se pudo completar con el ISBN.", "error");
+      }
+    }
+
+    function validarFormulario() {
+      const titulo = document.getElementById("titulo").value.trim();
+      const autor = document.getElementById("autor").value.trim();
+      const year = document.getElementById("anio").value;
+      const rating = document.getElementById("calificacion").value;
+
+      if (!titulo) throw new Error("El título es obligatorio.");
+      if (!autor) throw new Error("El autor es obligatorio.");
+      if (year !== "" && (Number(year) < 0 || Number(year) > 2100)) throw new Error("El año debe estar entre 0 y 2100.");
+      if (rating !== "" && (Number(rating) < 1 || Number(rating) > 5)) throw new Error("La calificación debe estar entre 1 y 5.");
+    }
+
+    async function agregarLibro(event) {
+      event.preventDefault();
+
+      try {
+        validarFormulario();
+        const payload = {
+          titulo: document.getElementById("titulo").value.trim(),
+          autor: document.getElementById("autor").value.trim(),
+          isbn: document.getElementById("isbn").value.trim(),
+          genero: document.getElementById("genero").value || "General",
+          anio: document.getElementById("anio").value || null,
+          calificacion: document.getElementById("calificacion").value || null,
+          portada: document.getElementById("portada").value.trim(),
+        };
+
+        if (state.editId) {
+          await fetchJson(`${API}/libros/${state.editId}`, {
+            method: "PUT",
+            body: JSON.stringify(payload),
+          });
+          showAlert("Libro actualizado correctamente.", "success");
+        } else {
+          await fetchJson(`${API}/libros`, {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          showAlert("Libro agregado correctamente.", "success");
+        }
+
+        resetFormulario();
+        await cargarDatos();
+      } catch (error) {
+        if (error.message) {
+          showAlert(error.message, "error");
+        }
+      }
+    }
+
+    async function alternarEstado(id) {
+      try {
+        await fetchJson(`${API}/libros/${id}/leido`, { method: "PUT" });
+        showAlert("Estado actualizado.", "success");
+        await cargarDatos();
+      } catch (error) {
+        // El error ya se mostró en fetchJson
+      }
+    }
+
+    async function borrarLibro(id, titulo) {
+      const confirmar = window.confirm(`¿Seguro que quieres eliminar "${titulo}"?`);
+      if (!confirmar) return;
+
+      try {
+        await fetchJson(`${API}/libros/${id}`, { method: "DELETE" });
+        showAlert("Libro eliminado correctamente.", "success");
+        await cargarDatos();
+      } catch (error) {
+        // El error ya se mostró en fetchJson
+      }
+    }
+
+    searchInput.addEventListener("input", (event) => {
+      state.busqueda = event.target.value.trim();
+      cargarDatos();
+    });
+
+    document.querySelectorAll(".filter-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.filtro = button.dataset.filter;
+        setFilterButtons();
+        cargarDatos();
+      });
+    });
+
+    form.addEventListener("submit", agregarLibro);
+    cancelBtn.addEventListener("click", resetFormulario);
+    buscarIsbnBtn.addEventListener("click", buscarPorIsbn);
+    themeToggle.addEventListener("click", () => {
+      const nextTheme = document.body.dataset.theme === "dark" ? "light" : "dark";
+      applyTheme(nextTheme);
+    });
+
+    const savedTheme = localStorage.getItem("booksoftware-theme") || "light";
+    applyTheme(savedTheme);
+    setFilterButtons();
+    cargarDatos();
+  </script>
+</body>
+</html>
