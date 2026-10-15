@@ -102,43 +102,6 @@ async function migrarEsquema(pool) {
     WHERE calificacion IS NULL OR calificacion < 1 OR calificacion > 5
   `);
 
-  const estados = [
-    ["Cien años de soledad", true],
-    ["Don Quijote de la Mancha", false],
-    ["El principito", true],
-    ["1984", false],
-    ["La sombra del viento", false],
-    ["Rayuela", false],
-    ["El túnel", true],
-  ];
-
-  for (const [titulo, leido] of estados) {
-    await pool.query(
-      `UPDATE libros
-       SET leido = ?
-       WHERE titulo = ?`,
-      [leido ? 1 : 0, titulo]
-    );
-  }
-
-  const asignaciones = [
-    ["Cien años de soledad", "Novela", 5],
-    ["Don Quijote de la Mancha", "Clásico", 5],
-    ["El principito", "Ficción", 4],
-    ["1984", "Ciencia Ficción", 5],
-    ["La sombra del viento", "Historia", 4],
-    ["Rayuela", "Novela", 4],
-    ["El túnel", "Biografía", 3],
-  ];
-
-  for (const [titulo, genero, calificacion] of asignaciones) {
-    await pool.query(
-      `UPDATE libros
-       SET genero = ?, calificacion = ?
-       WHERE titulo = ? AND (genero = 'General' OR genero IS NULL OR genero = '') AND (calificacion = 0 OR calificacion IS NULL)`,
-      [genero, calificacion, titulo]
-    );
-  }
 }
 
 function obtenerFiltro(req) {
@@ -175,6 +138,16 @@ function construirConsultaLibros({ busqueda, filtro }) {
 async function iniciar() {
   const pool = await conectarBD();
   await migrarEsquema(pool);
+
+  app.get("/health", async (req, res) => {
+    try {
+      await pool.query("SELECT 1");
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Error en comprobación de salud:", error);
+      res.status(503).json({ ok: false, error: "La base de datos no está disponible." });
+    }
+  });
 
   app.get("/libros", async (req, res) => {
     try {
