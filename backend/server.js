@@ -62,6 +62,7 @@ async function migrarEsquema(pool) {
       id INT AUTO_INCREMENT PRIMARY KEY,
       titulo VARCHAR(255) NOT NULL,
       autor VARCHAR(255) NOT NULL,
+      tipo VARCHAR(20) NOT NULL DEFAULT 'Libro',
       anio INT NULL,
       genero VARCHAR(50) NOT NULL DEFAULT 'General',
       calificacion INT NOT NULL DEFAULT 0,
@@ -73,6 +74,10 @@ async function migrarEsquema(pool) {
 
   const [columnas] = await pool.query("SHOW COLUMNS FROM libros");
   const nombresColumnas = columnas.map((columna) => columna.Field);
+
+  if (!nombresColumnas.includes("tipo")) {
+    await pool.query("ALTER TABLE libros ADD COLUMN tipo VARCHAR(20) NOT NULL DEFAULT 'Libro'");
+  }
 
   if (!nombresColumnas.includes("genero")) {
     await pool.query("ALTER TABLE libros ADD COLUMN genero VARCHAR(50) NOT NULL DEFAULT 'General'");
@@ -109,7 +114,20 @@ function obtenerFiltro(req) {
   return ["todos", "leidos", "pendientes"].includes(filtro) ? filtro : "todos";
 }
 
-function construirConsultaLibros({ busqueda, filtro }) {
+function obtenerTipo(req) {
+  const tipo = normalizarTexto(String(req.query.tipo || "todos")).toLowerCase();
+  return ["todos", "libro", "manga"].includes(tipo) ? tipo : "todos";
+}
+
+function validarTipo(valor) {
+  const tipo = normalizarTexto(valor || "Libro", 20).toLowerCase();
+  if (tipo !== "libro" && tipo !== "manga") {
+    return null;
+  }
+  return tipo === "manga" ? "Manga" : "Libro";
+}
+
+function construirConsultaLibros({ busqueda, filtro, tipo }) {
   let sql = "SELECT * FROM libros";
   const condiciones = [];
   const valores = [];
@@ -124,6 +142,11 @@ function construirConsultaLibros({ busqueda, filtro }) {
     condiciones.push("leido = TRUE");
   } else if (filtro === "pendientes") {
     condiciones.push("leido = FALSE");
+  }
+
+  if (tipo !== "todos") {
+    condiciones.push("tipo = ?");
+    valores.push(tipo === "manga" ? "Manga" : "Libro");
   }
 
   if (condiciones.length) {
@@ -153,7 +176,8 @@ async function iniciar() {
     try {
       const busqueda = normalizarTexto(String(req.query.search || ""));
       const filtro = obtenerFiltro(req);
-      const { sql, valores } = construirConsultaLibros({ busqueda, filtro });
+      const tipo = obtenerTipo(req);
+      const { sql, valores } = construirConsultaLibros({ busqueda, filtro, tipo });
       const [filas] = await pool.query(sql, valores);
       res.json(filas);
     } catch (error) {
@@ -166,7 +190,8 @@ async function iniciar() {
     try {
       const busqueda = normalizarTexto(String(req.query.search || ""));
       const filtro = obtenerFiltro(req);
-      const { sql, valores } = construirConsultaLibros({ busqueda, filtro });
+      const tipo = obtenerTipo(req);
+      const { sql, valores } = construirConsultaLibros({ busqueda, filtro, tipo });
       const [filas] = await pool.query(sql, valores);
       res.json(filas);
     } catch (error) {
@@ -236,6 +261,10 @@ async function iniciar() {
     try {
       const titulo = normalizarTexto(req.body?.titulo || "", 255);
       const autor = normalizarTexto(req.body?.autor || "", 255);
+      const tipo = validarTipo(req.body?.tipo);
+      if (!tipo) {
+        return res.status(400).json({ ok: false, error: "El tipo debe ser Libro o Manga." });
+      }
       const genero = normalizarTexto(req.body?.genero || "General", 50) || "General";
       const anio = validarNumero(req.body?.anio, 0, 2100, "Año");
       const calificacion = validarNumero(req.body?.calificacion, 1, 5, "Calificación");
@@ -259,8 +288,8 @@ async function iniciar() {
       }
 
       const [resultado] = await pool.query(
-        "INSERT INTO libros (titulo, autor, anio, genero, calificacion, isbn, portada, leido) VALUES (?, ?, ?, ?, ?, ?, ?, FALSE)",
-        [titulo, autor, anio, genero, calificacion ?? 0, isbn || null, portada || null]
+        "INSERT INTO libros (titulo, autor, tipo, anio, genero, calificacion, isbn, portada, leido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, FALSE)",
+        [titulo, autor, tipo, anio, genero, calificacion ?? 0, isbn || null, portada || null]
       );
 
       const [libro] = await pool.query("SELECT * FROM libros WHERE id = ?", [resultado.insertId]);
@@ -280,6 +309,10 @@ async function iniciar() {
 
       const titulo = normalizarTexto(req.body?.titulo || "", 255);
       const autor = normalizarTexto(req.body?.autor || "", 255);
+      const tipo = validarTipo(req.body?.tipo);
+      if (!tipo) {
+        return res.status(400).json({ ok: false, error: "El tipo debe ser Libro o Manga." });
+      }
       const genero = normalizarTexto(req.body?.genero || "General", 50) || "General";
       const anio = validarNumero(req.body?.anio, 0, 2100, "Año");
       const calificacion = validarNumero(req.body?.calificacion, 1, 5, "Calificación");
@@ -303,8 +336,8 @@ async function iniciar() {
       }
 
       await pool.query(
-        `UPDATE libros SET titulo = ?, autor = ?, anio = ?, genero = ?, calificacion = ?, isbn = ?, portada = ? WHERE id = ?`,
-        [titulo, autor, anio, genero, calificacion ?? 0, isbn || null, portada || null, id]
+        `UPDATE libros SET titulo = ?, autor = ?, tipo = ?, anio = ?, genero = ?, calificacion = ?, isbn = ?, portada = ? WHERE id = ?`,
+        [titulo, autor, tipo, anio, genero, calificacion ?? 0, isbn || null, portada || null, id]
       );
 
       const [libros] = await pool.query("SELECT * FROM libros WHERE id = ?", [id]);

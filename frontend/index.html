@@ -798,17 +798,49 @@
     }
 
     .cover-placeholder {
-      display: grid;
-      width: 86px;
-      height: 118px;
-      place-items: center;
-      border: 1px solid rgba(35, 91, 69, 0.18);
-      border-radius: 5px 10px 10px 5px;
-      background: linear-gradient(140deg, #fffefa, #e5ebdf);
-      color: #47745a;
+      position: relative;
+      display: flex;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      justify-content: flex-end;
+      overflow: hidden;
+      background: #26352f;
+      color: #fff;
+      text-align: left;
+    }
+
+    .fallback-cover-art {
+      position: absolute;
+      inset: 0;
+    }
+
+    .fallback-cover-copy {
+      position: relative;
+      z-index: 1;
+      padding: 42px 18px 18px;
+      background: linear-gradient(transparent, rgba(13, 20, 20, 0.83));
+    }
+
+    .fallback-cover-kind {
+      display: block;
+      margin-bottom: 7px;
+      color: #e6c982;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .fallback-cover-copy strong {
+      display: -webkit-box;
+      overflow: hidden;
       font-family: Georgia, "Times New Roman", serif;
-      font-size: 2.4rem;
-      box-shadow: 8px 10px 18px rgba(33, 56, 40, 0.16);
+      font-size: clamp(0.95rem, 1.5vw, 1.25rem);
+      line-height: 1.15;
+      text-wrap: pretty;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
     }
 
     .book-card-body {
@@ -942,6 +974,78 @@
       font-size: 0.9rem;
     }
 
+    .ideas-section {
+      margin: 36px 0 12px;
+    }
+
+    .idea-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .idea-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: 0 5px 18px var(--shadow);
+    }
+
+    .idea-card::after {
+      display: none;
+    }
+
+    .idea-art {
+      display: block;
+      width: 100%;
+      height: 172px;
+      object-fit: cover;
+    }
+
+    .idea-copy {
+      padding: 20px;
+    }
+
+    .idea-tag {
+      display: inline-block;
+      margin-bottom: 12px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--primary);
+      padding: 6px 10px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .idea-card h3 {
+      position: relative;
+      z-index: 1;
+      margin: 0 0 8px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.25rem;
+    }
+
+    .idea-card p {
+      position: relative;
+      z-index: 1;
+      max-width: 34ch;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 560px) {
+      .idea-art {
+        height: 190px;
+      }
+    }
+
     .alert {
       border-radius: 12px;
     }
@@ -955,6 +1059,10 @@
       .book-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
+
+      .idea-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     @media (max-width: 820px) {
@@ -964,6 +1072,10 @@
 
       .book-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .idea-grid {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -1071,13 +1183,13 @@
     <section class="hero" aria-labelledby="pageTitle">
       <div>
         <p class="eyebrow">Tu rincón de lectura</p>
-        <h1 id="pageTitle">Historias que merecen un lugar.</h1>
-        <p class="hero-copy">Organiza tus libros favoritos, descubre lo que ya leíste y lleva el registro de cada nueva aventura.</p>
+        <h1 id="pageTitle">Libros, manga y nuevas aventuras.</h1>
+        <p class="hero-copy">Organiza tus libros y mangas, guarda sus portadas y lleva el registro de cada historia que lees.</p>
       </div>
-      <a class="hero-link" href="#formTitle"><span aria-hidden="true">＋</span> Añadir libro</a>
+      <a class="hero-link" href="#formTitle"><span aria-hidden="true">＋</span> Añadir obra</a>
     </section>
 
-    <div class="stats-grid" aria-label="Estadísticas de libros">
+    <div class="stats-grid" aria-label="Estadísticas de biblioteca">
       <div class="stat-card">
         <span class="stat-label">Total</span>
         <span class="stat-value" id="stat-total">0</span>
@@ -1100,12 +1212,16 @@
       <div class="section-heading">
         <div>
           <h2 id="formTitle">Añade a tu biblioteca</h2>
-          <p>Completa los datos del libro o busca la información por ISBN.</p>
+          <p>Completa los datos de la obra o busca la información por ISBN.</p>
         </div>
       </div>
     <form id="bookForm" class="book-form" novalidate>
       <input id="titulo" class="field" type="text" placeholder="Título" aria-label="Título" required>
       <input id="autor" class="field" type="text" placeholder="Autor" aria-label="Autor" required>
+      <select id="tipo" class="select-field" aria-label="Tipo de obra">
+        <option value="Libro">Libro</option>
+        <option value="Manga">Manga</option>
+      </select>
       <input id="isbn" class="field" type="text" placeholder="ISBN" aria-label="ISBN">
       <select id="genero" class="select-field" aria-label="Género">
         <option value="General">General</option>
@@ -1116,6 +1232,14 @@
         <option value="Clásico">Clásico</option>
         <option value="Biografía">Biografía</option>
         <option value="Aventura">Aventura</option>
+        <option value="Shonen">Shonen</option>
+        <option value="Shojo">Shojo</option>
+        <option value="Seinen">Seinen</option>
+        <option value="Josei">Josei</option>
+        <option value="Kodomomuke">Kodomomuke</option>
+        <option value="Isekai">Isekai</option>
+        <option value="Deportes">Deportes</option>
+        <option value="Misterio">Misterio</option>
       </select>
       <input id="anio" class="field" type="number" min="0" max="2100" placeholder="Año" aria-label="Año">
       <select id="calificacion" class="select-field" aria-label="Calificación">
@@ -1137,23 +1261,64 @@
       <div class="section-heading">
         <div>
           <h2 id="libraryTitle">Mi biblioteca</h2>
-          <p>Todos tus libros, en un solo lugar.</p>
+          <p>Todos tus libros y mangas, en un solo lugar.</p>
         </div>
-        <span id="resultCount" class="book-year" aria-live="polite">0 libros</span>
+        <span id="resultCount" class="book-year" aria-live="polite">0 obras</span>
       </div>
       <div class="toolbar">
         <div class="search-box">
-          <input id="searchInput" type="search" placeholder="Buscar por título, autor o género..." aria-label="Buscar libros">
+          <input id="searchInput" type="search" placeholder="Buscar por título, autor o género..." aria-label="Buscar obras">
         </div>
 
-        <div class="filter-group" aria-label="Filtros de libros">
+        <div class="filter-group" aria-label="Tipo de obra">
+          <button class="filter-btn type-filter active" type="button" data-type="todos">Todo</button>
+          <button class="filter-btn type-filter" type="button" data-type="libro">Libros</button>
+          <button class="filter-btn type-filter" type="button" data-type="manga">Manga</button>
+        </div>
+
+        <div class="filter-group" aria-label="Filtros de lectura">
           <button class="filter-btn active" type="button" data-filter="todos">Todos</button>
           <button class="filter-btn" type="button" data-filter="pendientes">Pendientes</button>
           <button class="filter-btn" type="button" data-filter="leidos">Leídos</button>
         </div>
       </div>
       <div id="alertBox" class="alert" role="alert" aria-live="polite"></div>
-      <div id="lista" class="book-grid" aria-label="Lista de libros"></div>
+      <div id="lista" class="book-grid" aria-label="Lista de obras"></div>
+    </section>
+
+    <section class="ideas-section" aria-labelledby="ideasTitle">
+      <div class="section-heading">
+        <div>
+          <h2 id="ideasTitle">Ideas para tu próximo manga</h2>
+          <p>Tres semillas originales para convertir en tu propia historia.</p>
+        </div>
+      </div>
+      <div class="idea-grid">
+        <article class="idea-card">
+          <img class="idea-art" src="images/ideas/biblioteca-suenos.svg" alt="" aria-hidden="true">
+          <div class="idea-copy">
+            <span class="idea-tag">Misterio · Fantasía</span>
+            <h3>La biblioteca de los sueños</h3>
+            <p>Una aprendiz cataloga sueños ajenos y descubre uno que predice la desaparición de un barrio entero.</p>
+          </div>
+        </article>
+        <article class="idea-card">
+          <img class="idea-art" src="images/ideas/tren-lunar.svg" alt="" aria-hidden="true">
+          <div class="idea-copy">
+            <span class="idea-tag">Aventura · Ciencia ficción</span>
+            <h3>El último tren lunar</h3>
+            <p>En una ciudad donde la noche dura un minuto, dos hermanos buscan el tren que puede devolver las estrellas.</p>
+          </div>
+        </article>
+        <article class="idea-card">
+          <img class="idea-art" src="images/ideas/once-segundos.svg" alt="" aria-hidden="true">
+          <div class="idea-copy">
+            <span class="idea-tag">Deportes · Drama</span>
+            <h3>Once segundos</h3>
+            <p>Un equipo escolar sin victorias aprende a jugar unido gracias a una capitana que solo puede entrenar once segundos cada vez.</p>
+          </div>
+        </article>
+      </div>
     </section>
   </div>
 
@@ -1161,6 +1326,7 @@
     const API = "/api";
     const state = {
       filtro: "todos",
+      tipo: "todos",
       busqueda: "",
       editId: null,
     };
@@ -1217,7 +1383,10 @@
 
     function setFilterButtons() {
       document.querySelectorAll(".filter-btn").forEach((button) => {
-        button.classList.toggle("active", button.dataset.filter === state.filtro);
+        const active = button.classList.contains("type-filter")
+          ? button.dataset.type === state.tipo
+          : button.dataset.filter === state.filtro;
+        button.classList.toggle("active", active);
       });
     }
 
@@ -1247,17 +1416,41 @@
       return Number(libro.leido) === 1 || libro.leido === true || libro.leido === "1";
     }
 
+    function crearPortadaAlternativa(libro) {
+      const placeholder = document.createElement("div");
+      placeholder.className = "cover-placeholder";
+      placeholder.setAttribute("aria-label", `Portada ilustrada de ${libro.titulo}`);
+
+      const image = document.createElement("img");
+      image.className = "fallback-cover-art";
+      image.src = libro.tipo === "Manga" ? "images/cover-manga.svg" : "images/cover-book.svg";
+      image.alt = "";
+
+      const copy = document.createElement("div");
+      copy.className = "fallback-cover-copy";
+      const kind = document.createElement("span");
+      kind.className = "fallback-cover-kind";
+      kind.textContent = libro.tipo === "Manga" ? "Colección manga" : "Biblioteca";
+      const title = document.createElement("strong");
+      title.textContent = libro.titulo;
+      copy.append(kind, title);
+      placeholder.append(image, copy);
+      return placeholder;
+    }
+
     function renderLista(libros) {
-      document.getElementById("resultCount").textContent = `${libros.length} ${libros.length === 1 ? "libro" : "libros"}`;
+      const etiquetaTipo = state.tipo === "manga" ? "manga" : state.tipo === "libro" ? "libro" : "obra";
+      const plural = libros.length === 1 ? etiquetaTipo : state.tipo === "manga" ? "mangas" : state.tipo === "libro" ? "libros" : "obras";
+      document.getElementById("resultCount").textContent = `${libros.length} ${plural}`;
       if (!libros.length) {
         const emptyState = document.createElement("div");
         emptyState.className = "empty-state";
         const title = document.createElement("strong");
-        title.textContent = state.busqueda ? "No encontramos ese libro" : "Tu biblioteca empieza aquí";
+        title.textContent = state.busqueda ? "No encontramos resultados" : "Tu biblioteca empieza aquí";
         const message = document.createElement("span");
         message.textContent = state.busqueda
-          ? "Prueba con otro título, autor o género."
-          : "Añade un libro con el formulario para verlo aparecer aquí.";
+          ? "Prueba con otro título, autor o género, o cambia los filtros."
+          : "Añade un libro o manga con el formulario para verlo aparecer aquí.";
         emptyState.append(title, message);
         lista.replaceChildren(emptyState);
         return;
@@ -1278,19 +1471,11 @@
           image.alt = `Portada de ${libro.titulo}`;
           image.loading = "lazy";
           image.addEventListener("error", () => {
-            const placeholder = document.createElement("div");
-            placeholder.className = "cover-placeholder";
-            placeholder.setAttribute("aria-label", "Portada no disponible");
-            placeholder.textContent = "B";
-            cover.replaceChildren(placeholder);
+            cover.replaceChildren(crearPortadaAlternativa(libro));
           }, { once: true });
           cover.appendChild(image);
         } else {
-          const placeholder = document.createElement("div");
-          placeholder.className = "cover-placeholder";
-          placeholder.setAttribute("aria-label", "Sin portada");
-          placeholder.textContent = "B";
-          cover.appendChild(placeholder);
+          cover.appendChild(crearPortadaAlternativa(libro));
         }
 
         const body = document.createElement("div");
@@ -1300,7 +1485,9 @@
         meta.className = "book-meta";
         const genre = document.createElement("span");
         genre.className = "genre-tag";
-        genre.textContent = libro.genero || "General";
+        genre.textContent = libro.tipo === "Manga"
+          ? `Manga · ${libro.genero || "General"}`
+          : libro.genero || "General";
         const year = document.createElement("span");
         year.className = "book-year";
         year.textContent = libro.anio ?? "Año desconocido";
@@ -1357,7 +1544,7 @@
 
     async function cargarDatos() {
       try {
-        const url = `${API}/libros?search=${encodeURIComponent(state.busqueda)}&filtro=${encodeURIComponent(state.filtro)}`;
+        const url = `${API}/libros?search=${encodeURIComponent(state.busqueda)}&filtro=${encodeURIComponent(state.filtro)}&tipo=${encodeURIComponent(state.tipo)}`;
         const [libros, stats] = await Promise.all([
           fetchJson(url),
           fetchJson(`${API}/estadisticas`),
@@ -1375,6 +1562,7 @@
       state.editId = libro.id;
       document.getElementById("titulo").value = libro.titulo || "";
       document.getElementById("autor").value = libro.autor || "";
+      document.getElementById("tipo").value = libro.tipo || "Libro";
       document.getElementById("isbn").value = libro.isbn || "";
       document.getElementById("genero").value = libro.genero || "General";
       document.getElementById("anio").value = libro.anio ?? "";
@@ -1438,6 +1626,7 @@
         const payload = {
           titulo: document.getElementById("titulo").value.trim(),
           autor: document.getElementById("autor").value.trim(),
+          tipo: document.getElementById("tipo").value,
           isbn: document.getElementById("isbn").value.trim(),
           genero: document.getElementById("genero").value || "General",
           anio: document.getElementById("anio").value || null,
@@ -1498,7 +1687,11 @@
 
     document.querySelectorAll(".filter-btn").forEach((button) => {
       button.addEventListener("click", () => {
-        state.filtro = button.dataset.filter;
+        if (button.classList.contains("type-filter")) {
+          state.tipo = button.dataset.type;
+        } else {
+          state.filtro = button.dataset.filter;
+        }
         setFilterButtons();
         cargarDatos();
       });

@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS libros (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   titulo        VARCHAR(255) NOT NULL,
   autor         VARCHAR(255) NOT NULL,
+  tipo          VARCHAR(20) NOT NULL DEFAULT 'Libro',
   anio          INT,
   genero        VARCHAR(50) NOT NULL DEFAULT 'General',
   calificacion  INT NOT NULL DEFAULT 0,
